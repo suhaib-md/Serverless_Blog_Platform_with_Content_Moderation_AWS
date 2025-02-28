@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  ExistingS3Bucket:
+    Type: String
+    Description: "Name of the existing S3 bucket hosting the static site"
+
+Resources:
+  MyCloudFrontOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: MyS3OAC
+        Description: OAC for S3 static website
+        SigningProtocol: sigv4
+        SigningBehavior: always
+        OriginAccessControlOriginType: s3
+
+  MyCloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: "CloudFront Distribution for S3 Static Website"
+        DefaultRootObject: "index.html"
+        Origins:
+          - Id: S3Origin
+            DomainName: !Sub "${ExistingS3Bucket}.s3.amazonaws.com"
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+            OriginAccessControlId: !Ref MyCloudFrontOAC
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: "redirect-to-https"
+          AllowedMethods: ["GET", "HEAD"]
+          CachedMethods: ["GET", "HEAD"]
+          Compress: true
+          CachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6"  # AWS managed caching policy
+        PriceClass: "PriceClass_100"
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponsePagePath: "/index.html"
+            ResponseCode: 200
+          - ErrorCode: 404
+            ResponsePagePath: "/index.html"
+            ResponseCode: 200
+
+Outputs:
+  CloudFrontDomain:
+    Description: "CloudFront Distribution Domain Name"
+    Value: !GetAtt MyCloudFrontDistribution.DomainName
