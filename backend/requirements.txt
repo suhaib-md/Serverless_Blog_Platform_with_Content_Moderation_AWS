@@ -1,0 +1,10 @@
+boto3
+requests
+jsonschema
+pydantic
+json
+uuid
+time
+os
+decimal
+botocore.exceptions
