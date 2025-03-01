@@ -18,6 +18,12 @@ table_name = os.environ['BLOG_TABLE']
 table = dynamodb.Table(table_name)
 sns_topic_arn = os.environ["SNS_TOPIC_ARN"]  # Ensure this is set in Lambda environment variables
 
+def report_pipeline_success(event):
+    """ Reports success to CodePipeline """
+    if "CodePipeline.job" in event:
+        job_id = event["CodePipeline.job"]["id"]
+        codepipeline.put_job_success_result(jobId=job_id)
+
 # Custom JSON Encoder for handling Decimal values
 class DecimalEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -114,8 +120,3 @@ def lambda_handler(event, context):
             "body": json.dumps({"error": str(e)}, cls=DecimalEncoder)
         }
 
-def report_pipeline_success(event):
-    """ Reports success to CodePipeline """
-    if "CodePipeline.job" in event:
-        job_id = event["CodePipeline.job"]["id"]
-        codepipeline.put_job_success_result(jobId=job_id)

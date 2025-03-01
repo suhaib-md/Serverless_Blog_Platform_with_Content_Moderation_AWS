@@ -8,15 +8,14 @@ s3 = boto3.client("s3")
 sns = boto3.client("sns")
 codepipeline = boto3.client("codepipeline")
 
+# Environment variables
+sns_topic_arn = os.environ["SNS_TOPIC_ARN"]  # Ensure this is set in Lambda environment variables
+
 def report_pipeline_success(event):
     """ Reports success to CodePipeline """
     if "CodePipeline.job" in event:
         job_id = event["CodePipeline.job"]["id"]
         codepipeline.put_job_success_result(jobId=job_id)
-
-
-# Environment variables
-sns_topic_arn = os.environ["SNS_TOPIC_ARN"]  # Ensure this is set in Lambda environment variables
 
 def lambda_handler(event, context):
     print("Received event:", json.dumps(event, indent=2))
@@ -49,9 +48,9 @@ def lambda_handler(event, context):
                 s3.delete_object(Bucket=bucket_name, Key=object_key)
                 print(f"Deleted flagged image: s3://{bucket_name}/{object_key}")
 
+        report_pipeline_success(event)
+
         except Exception as e:
             print("Error processing image:", str(e))
-
-    report_pipeline_success(event)
 
     return {"statusCode": 200, "body": "Moderation process completed"}
