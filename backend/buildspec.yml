@@ -4,11 +4,16 @@ phases:
   install:
     runtime-versions:
       python: 3.9
+    commands:
+      - cd backend  # Ensure we are in the correct directory
+      - pip install --upgrade pip
+      - pip install -r requirements.txt -t package
+      - cp -r *.py package/  # Copy Python files to package directory
+
   build:
     commands:
-      - cd backend
-      - pip install -r requirements.txt -t .
-      - zip -r deploy.zip *
+      - zip -r ../deploy.zip *
+
   post_build:
     commands:
       - aws lambda update-function-code --function-name CreatePost --zip-file fileb://deploy.zip
@@ -18,4 +23,4 @@ phases:
 
 artifacts:
   files:
-    - deploy.zip
+    - backend/deploy.zip
