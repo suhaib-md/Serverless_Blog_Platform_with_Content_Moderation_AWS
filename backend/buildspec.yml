@@ -11,7 +11,6 @@ phases:
 
   build:
     commands:
-      - cd backend
       - zip -r deploy.zip *  
       - mv deploy.zip $CODEBUILD_SRC_DIR/deploy.zip  # Move ZIP file to root directory
 
