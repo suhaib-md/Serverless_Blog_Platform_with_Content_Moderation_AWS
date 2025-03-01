@@ -12,10 +12,11 @@ phases:
   build:
     commands:
       - zip -r deploy.zip *  # Zip inside backend directory
+      - mv deploy.zip ../deploy.zip  # Move to root so post_build can access it
 
   post_build:
     commands:
-      - ls -lah backend  # Debugging: List files inside backend/
+      - ls -lah 
       - aws lambda update-function-code --function-name CreatePost --zip-file fileb://deploy.zip
       - aws lambda update-function-code --function-name GetPosts --zip-file fileb://deploy.zip
       - aws lambda update-function-code --function-name GetUploadUrl --zip-file fileb://deploy.zip
