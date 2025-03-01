@@ -4,6 +4,7 @@ import uuid
 import time
 import os
 from decimal import Decimal
+from urllib.parse import urlparse
 from botocore.exceptions import ClientError
 
 # Initialize AWS services
@@ -51,15 +52,23 @@ def lambda_handler(event, context):
                 "body": json.dumps({"error": "Missing required fields"}, cls=DecimalEncoder)
             }
         
-        # Extract bucket name and object key from image_url
-        bucket_name = image_url.split("/")[2].split(".")[0]  # Extract bucket name
-        object_key = "/".join(image_url.split("/")[3:])  # Extract object key
+        # 🔹 Extract bucket name and object key from image_url (More Reliable)
+        parsed_url = urlparse(image_url)
+        bucket_name = parsed_url.netloc.split('.')[0]  # Extract bucket from domain
+        object_key = parsed_url.path.lstrip("/")  # Remove leading slash
 
         # 🔹 Moderate the image using Rekognition
-        response = rekognition.detect_moderation_labels(
-            Image={"S3Object": {"Bucket": bucket_name, "Name": object_key}},
-            MinConfidence=75  # Confidence threshold for moderation
-        )
+        try:
+            response = rekognition.detect_moderation_labels(
+                Image={"S3Object": {"Bucket": bucket_name, "Name": object_key}},
+                MinConfidence=75  # Confidence threshold for moderation
+            )
+        except ClientError as e:
+            print(f"Rekognition error: {e}")
+            return {
+                "statusCode": 500,
+                "body": json.dumps({"error": "Image moderation failed"}, cls=DecimalEncoder)
+            }
 
         if response["ModerationLabels"]:  # If image is flagged
             labels = [label["Name"] for label in response["ModerationLabels"]]
@@ -76,7 +85,6 @@ def lambda_handler(event, context):
             s3.delete_object(Bucket=bucket_name, Key=object_key)
             print(f"Flagged image {object_key} deleted from S3")
 
-            # Return an error message to the browser
             return {
                 "statusCode": 400,
                 "body": json.dumps({
@@ -97,14 +105,10 @@ def lambda_handler(event, context):
             }
         )
 
-        # Report success to CodePipeline
-        report_pipeline_success(event)
-
         return {
             "statusCode": 200,
             "body": json.dumps({"message": "Post created successfully!", "postId": post_id}, cls=DecimalEncoder)
         }
-
 
     except ClientError as e:
         print("AWS Error:", str(e))
@@ -120,3 +124,6 @@ def lambda_handler(event, context):
             "body": json.dumps({"error": str(e)}, cls=DecimalEncoder)
         }
 
+    finally:
+        # ✅ Report success to CodePipeline (even if an error occurs)
+        report_pipeline_success(event)

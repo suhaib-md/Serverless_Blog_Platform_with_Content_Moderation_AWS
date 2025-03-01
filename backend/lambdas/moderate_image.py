@@ -48,9 +48,9 @@ def lambda_handler(event, context):
                 s3.delete_object(Bucket=bucket_name, Key=object_key)
                 print(f"Deleted flagged image: s3://{bucket_name}/{object_key}")
 
-        report_pipeline_success(event)
-
         except Exception as e:
             print("Error processing image:", str(e))
+    
+    report_pipeline_success(event)
 
     return {"statusCode": 200, "body": "Moderation process completed"}
