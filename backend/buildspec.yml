@@ -11,7 +11,6 @@ phases:
 
   build:
     commands:
-      - cd backend  # Ensure we are in the backend directory
       - zip -r deploy.zip *  # Zip inside backend directory
 
   post_build:
