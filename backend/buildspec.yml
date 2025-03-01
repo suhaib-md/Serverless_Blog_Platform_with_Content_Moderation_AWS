@@ -15,7 +15,6 @@ phases:
 
   post_build:
     commands:
-      - cd backend  # Ensure we are in the correct directory
       - ls -lah backend  # Debugging: List files inside backend/
       - aws lambda update-function-code --function-name CreatePost --zip-file fileb://deploy.zip
       - aws lambda update-function-code --function-name GetPosts --zip-file fileb://deploy.zip
