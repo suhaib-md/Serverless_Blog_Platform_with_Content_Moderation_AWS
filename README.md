@@ -40,6 +40,8 @@ This repository contains a **serverless blog platform** built using **AWS servic
 - **SNS & SQS** handle event-driven alerts.
 - **Lambda functions** process flagged images and send moderation notifications.
 
+![serverless_blog](https://github.com/user-attachments/assets/60a6f074-f63a-4737-9b6d-805828111424)
+
 ---
 
 ## 🚀 **Getting Started**
