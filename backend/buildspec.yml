@@ -11,14 +11,15 @@ phases:
 
   build:
     commands:
-      - zip -r ../deploy.zip *
+      - cd backend  # Ensure we are in the backend directory
+      - zip -r deploy.zip *  # Zip inside backend directory
 
   post_build:
     commands:
-      - aws lambda update-function-code --function-name CreatePost --zip-file fileb://deploy.zip
-      - aws lambda update-function-code --function-name GetPosts --zip-file fileb://deploy.zip
-      - aws lambda update-function-code --function-name GetUploadUrl --zip-file fileb://deploy.zip
-      - aws lambda update-function-code --function-name moderate_image --zip-file fileb://deploy.zip
+      - aws lambda update-function-code --function-name CreatePost --zip-file fileb://backend/deploy.zip
+      - aws lambda update-function-code --function-name GetPosts --zip-file fileb://backend/deploy.zip
+      - aws lambda update-function-code --function-name GetUploadUrl --zip-file fileb://backend/deploy.zip
+      - aws lambda update-function-code --function-name moderate_image --zip-file fileb://backend/deploy.zip
 
 artifacts:
   files:
