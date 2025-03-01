@@ -6,6 +6,14 @@ import os
 rekognition = boto3.client("rekognition")
 s3 = boto3.client("s3")
 sns = boto3.client("sns")
+codepipeline = boto3.client("codepipeline")
+
+def report_pipeline_success(event):
+    """ Reports success to CodePipeline """
+    if "CodePipeline.job" in event:
+        job_id = event["CodePipeline.job"]["id"]
+        codepipeline.put_job_success_result(jobId=job_id)
+
 
 # Environment variables
 sns_topic_arn = os.environ["SNS_TOPIC_ARN"]  # Ensure this is set in Lambda environment variables
@@ -43,5 +51,7 @@ def lambda_handler(event, context):
 
         except Exception as e:
             print("Error processing image:", str(e))
+
+    report_pipeline_success(event)
 
     return {"statusCode": 200, "body": "Moderation process completed"}

@@ -5,6 +5,13 @@ import time
 
 s3_client = boto3.client('s3')
 bucket_name = os.environ['IMAGE_BUCKET']
+codepipeline = boto3.client("codepipeline")
+
+def report_pipeline_success(event):
+    """ Reports success to CodePipeline """
+    if "CodePipeline.job" in event:
+        job_id = event["CodePipeline.job"]["id"]
+        codepipeline.put_job_success_result(jobId=job_id)
 
 def lambda_handler(event, context):
     try:
@@ -16,6 +23,8 @@ def lambda_handler(event, context):
             Params={'Bucket': bucket_name, 'Key': f"uploads/{file_name}", 'ContentType': 'image/jpeg'},
             ExpiresIn=3600
         )
+
+        report_pipeline_success(event)
 
         return {
             'statusCode': 200,

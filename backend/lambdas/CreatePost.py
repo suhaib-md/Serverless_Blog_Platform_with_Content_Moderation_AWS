@@ -11,6 +11,7 @@ dynamodb = boto3.resource("dynamodb")
 rekognition = boto3.client("rekognition")
 s3 = boto3.client("s3")
 sns = boto3.client("sns")
+codepipeline = boto3.client("codepipeline")
 
 # Environment variables
 table_name = os.environ['BLOG_TABLE']
@@ -90,10 +91,14 @@ def lambda_handler(event, context):
             }
         )
 
+        # Report success to CodePipeline
+        report_pipeline_success(event)
+
         return {
             "statusCode": 200,
             "body": json.dumps({"message": "Post created successfully!", "postId": post_id}, cls=DecimalEncoder)
         }
+
 
     except ClientError as e:
         print("AWS Error:", str(e))
@@ -108,3 +113,9 @@ def lambda_handler(event, context):
             "statusCode": 500,
             "body": json.dumps({"error": str(e)}, cls=DecimalEncoder)
         }
+
+def report_pipeline_success(event):
+    """ Reports success to CodePipeline """
+    if "CodePipeline.job" in event:
+        job_id = event["CodePipeline.job"]["id"]
+        codepipeline.put_job_success_result(jobId=job_id)

@@ -7,6 +7,13 @@ from decimal import Decimal
 dynamodb = boto3.resource("dynamodb")
 table_name = os.environ["BLOG_TABLE"]
 table = dynamodb.Table(table_name)
+codepipeline = boto3.client("codepipeline")
+
+def report_pipeline_success(event):
+    """ Reports success to CodePipeline """
+    if "CodePipeline.job" in event:
+        job_id = event["CodePipeline.job"]["id"]
+        codepipeline.put_job_success_result(jobId=job_id)
 
 # 🔹 Custom JSON Encoder for Decimal values
 class DecimalEncoder(json.JSONEncoder):
@@ -26,6 +33,8 @@ def lambda_handler(event, context):
             response = table.scan(ExclusiveStartKey=response["LastEvaluatedKey"])
 
         posts.extend(response.get("Items", []))  # Add the last batch of items
+
+        report_pipeline_success(event)
 
         return {
             "statusCode": 200,
