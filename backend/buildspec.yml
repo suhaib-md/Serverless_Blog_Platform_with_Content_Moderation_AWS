@@ -5,23 +5,25 @@ phases:
     runtime-versions:
       python: 3.9
     commands:
-      - cd backend  # Ensure we are in the correct directory
+      - cd backend  # Move to backend directory
       - pip install --upgrade pip
       - pip install -r requirements.txt -t .
 
   build:
     commands:
-      - zip -r deploy.zip *  # Zip inside backend directory
-      - mv deploy.zip ../deploy.zip  # Move to root so post_build can access it
+      - cd backend
+      - zip -r deploy.zip *  
+      - mv deploy.zip $CODEBUILD_SRC_DIR/deploy.zip  # Move ZIP file to root directory
 
   post_build:
     commands:
-      - ls -lah 
-      - aws lambda update-function-code --function-name CreatePost --zip-file fileb://deploy.zip
-      - aws lambda update-function-code --function-name GetPosts --zip-file fileb://deploy.zip
-      - aws lambda update-function-code --function-name GetUploadUrl --zip-file fileb://deploy.zip
-      - aws lambda update-function-code --function-name moderate_image --zip-file fileb://deploy.zip
+      - ls -lah $CODEBUILD_SRC_DIR  # List files to confirm deploy.zip exists
+      - test -f $CODEBUILD_SRC_DIR/deploy.zip && echo "deploy.zip found" || echo "deploy.zip MISSING"
+      - aws lambda update-function-code --function-name CreatePost --zip-file fileb://$CODEBUILD_SRC_DIR/deploy.zip
+      - aws lambda update-function-code --function-name GetPosts --zip-file fileb://$CODEBUILD_SRC_DIR/deploy.zip
+      - aws lambda update-function-code --function-name GetUploadUrl --zip-file fileb://$CODEBUILD_SRC_DIR/deploy.zip
+      - aws lambda update-function-code --function-name moderate_image --zip-file fileb://$CODEBUILD_SRC_DIR/deploy.zip
 
 artifacts:
   files:
-    - backend/deploy.zip
+    - deploy.zip  # Ensure deploy.zip is available after build
